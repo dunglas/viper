@@ -33,14 +33,14 @@ import (
 	"sync"
 	"time"
 
-	yaml "gopkg.in/yaml.v2"
+	"gopkg.in/yaml.v2"
 
 	"github.com/fsnotify/fsnotify"
 	"github.com/hashicorp/hcl"
 	"github.com/hashicorp/hcl/hcl/printer"
 	"github.com/magiconair/properties"
 	"github.com/mitchellh/mapstructure"
-	toml "github.com/pelletier/go-toml"
+	"github.com/pelletier/go-toml"
 	"github.com/spf13/afero"
 	"github.com/spf13/cast"
 	jww "github.com/spf13/jwalterweatherman"
@@ -233,6 +233,15 @@ func Reset() {
 	v = New()
 	SupportedExts = []string{"json", "toml", "yaml", "yml", "properties", "props", "prop", "hcl", "dotenv", "env"}
 	SupportedRemoteProviders = []string{"etcd", "consul"}
+}
+
+// SetKeyDelimiter sets the delimiter used for determining key parts.
+// By default it's value is ".".
+func SetKeyDelimiter(keyDelim string) { v.SetKeyDelimiter(keyDelim) }
+func (v *Viper) SetKeyDelimiter(keyDelim string) {
+	if keyDelim != "" {
+		v.keyDelim = keyDelim
+	}
 }
 
 type defaultRemoteProvider struct {
@@ -1673,7 +1682,7 @@ func (v *Viper) getRemoteConfig(provider RemoteProvider) (map[string]interface{}
 func (v *Viper) watchKeyValueConfigOnChannel() error {
 	for _, rp := range v.remoteProviders {
 		respc, _ := RemoteConfig.WatchChannel(rp)
-		//Todo: Add quit channel
+		// Todo: Add quit channel
 		go func(rc <-chan *RemoteResponse) {
 			for {
 				b := <-rc
@@ -1709,7 +1718,7 @@ func (v *Viper) watchRemoteConfig(provider RemoteProvider) (map[string]interface
 }
 
 // AllKeys returns all keys holding a value, regardless of where they are set.
-// Nested keys are returned with a v.keyDelim (= ".") separator
+// Nested keys are returned with a v.keyDelim separator
 func AllKeys() []string { return v.AllKeys() }
 func (v *Viper) AllKeys() []string {
 	m := map[string]bool{}
@@ -1732,7 +1741,7 @@ func (v *Viper) AllKeys() []string {
 
 // flattenAndMergeMap recursively flattens the given map into a map[string]bool
 // of key paths (used as a set, easier to manipulate than a []string):
-// - each path is merged into a single key string, delimited with v.keyDelim (= ".")
+// - each path is merged into a single key string, delimited with v.keyDelim
 // - if a path is shadowed by an earlier value in the initial shadow map,
 //   it is skipped.
 // The resulting set of paths is merged to the given shadow set at the same time.
